@@ -123,7 +123,7 @@ class ReActAgent:
 
 
 if __name__ == "__main__":
-    from react.search import search
+    from react.tool.search import search
 
     llm = HelloAgentsLLM()
 

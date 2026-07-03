@@ -2,7 +2,8 @@ from typing import Dict, Any
 
 from dotenv import load_dotenv
 
-import search
+from react.tool import search, calculator
+
 
 class ToolExecutor:
     """
@@ -45,15 +46,16 @@ if __name__ == '__main__':
     # 2. 注册我们的实战搜索工具
     search_description = "一个网页搜索引擎。当你需要回答关于时事、事实以及在你的知识库中找不到的信息时，应使用此工具。"
     toolExecutor.registerTool("Search", search_description, search.search)
+    toolExecutor.registerTool("Calculate", "一个基于 SymPy 的数学计算工具。", calculator.calculator)
 
     # 3. 打印可用的工具
     print("\n--- 可用的工具 ---")
     print(toolExecutor.getAvailableTools())
 
-    # 4. 智能体的Action调用，这次我们问一个实时性的问题
-    print("\n--- 执行 Action: Search['英伟达最新的GPU型号是什么'] ---")
-    tool_name = "Search"
-    tool_input = "英伟达最新的GPU型号是什么"
+    # 4. 智能体的Action调用
+    print("\n--- 执行 Action: calculate['(123 + 456) × 789/ 12 = ?'] ---")
+    tool_name = "Calculate"
+    tool_input = "(123 + 456) × 789/ 12 = ?"
 
     tool_function = toolExecutor.getTool(tool_name)
     if tool_function:
