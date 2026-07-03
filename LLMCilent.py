@@ -61,23 +61,23 @@ class HelloAgentsLLM:
 
 
 # ReAct
-# if __name__ == '__main__':
-#     try:
-#         llmClient = HelloAgentsLLM()
-#
-#         exampleMessages = [
-#             {"role": "system", "content": "You are a helpful assistant that writes Python code."},
-#             {"role": "user", "content": "写一个快速排序算法"}
-#         ]
-#
-#         print("--- 调用LLM ---")
-#         responseText = llmClient.think(exampleMessages)
-#         if responseText:
-#             print("\n\n--- 完整模型响应 ---")
-#             print(responseText)
-#
-#     except ValueError as e:
-#         print(e)
+if __name__ == '__main__':
+    try:
+        llmClient = HelloAgentsLLM()
+
+        exampleMessages = [
+            {"role": "system", "content": "You are a helpful assistant that writes Python code."},
+            {"role": "user", "content": "苏州天气"}
+        ]
+
+        print("--- 调用LLM ---")
+        responseText = llmClient.think(exampleMessages)
+        if responseText:
+            print("\n\n--- 完整模型响应 ---")
+            print(responseText)
+
+    except ValueError as e:
+        print(e)
 
 # PlanAndSolve
 # if __name__ == "__main__":
@@ -90,13 +90,13 @@ class HelloAgentsLLM:
 #
 #     print(answer)
 
-# PlanAndSolve
-if __name__ == "__main__":
-
-    llm = HelloAgentsLLM()
-
-    agent = ReflectionAgent(llm, 5)
-
-    answer = agent.run("编写一个Python函数，找出1到n之间所有的素数 (prime numbers)")
-
-    print(answer)
+# # PlanAndSolve
+# if __name__ == "__main__":
+#
+#     llm = HelloAgentsLLM()
+#
+#     agent = ReflectionAgent(llm, 5)
+#
+#     answer = agent.run("编写一个Python函数，找出1到n之间所有的素数 (prime numbers)")
+#
+#     print(answer)

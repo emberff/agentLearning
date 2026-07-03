@@ -1,6 +1,6 @@
 import re
 
-from react.LLM import HelloAgentsLLM
+from LLMCilent import HelloAgentsLLM
 from react.toolExecutor import ToolExecutor
 
 
@@ -31,77 +31,140 @@ class ReActAgent:
         self.tool_executor = tool_executor
         self.max_steps = max_steps
         self.history = []
+        self.failed_count = 0
+        self.same_tool_failed = 0
+        self.last_failed_tool = None
 
     def run(self, question: str):
-        """
-        运行ReAct智能体来回答一个问题。
-        """
-        self.history = []  # 每次运行时重置历史记录
+
+        self.history = []
+
+        self.failed_count = 0
+        self.same_tool_failed = 0
+        self.last_failed_tool = None
+
         current_step = 0
 
         while current_step < self.max_steps:
-            current_step += 1
-            print(f"--- 第 {current_step} 步 ---")
 
-            # 1. 格式化提示词
+            current_step += 1
+
+            print(f"--- 第{current_step}步 ---")
+
             tools_desc = self.tool_executor.getAvailableTools()
+
             history_str = "\n".join(self.history)
+
             prompt = REACT_PROMPT_TEMPLATE.format(
                 tools=tools_desc,
                 question=question,
                 history=history_str
             )
 
-            # 2. 调用LLM进行思考
-            messages = [{"role": "user", "content": prompt}]
-            response_text = self.llm_client.think(messages=messages)
+            messages = [
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
 
-            if not response_text:
-                print("错误:LLM未能返回有效响应。")
+            response = self.llm_client.think(messages)
+
+            if not response:
                 break
 
-            # 3. 解析LLM的输出
-            thought, action = self._parse_output(response_text)
+            thought, action = self._parse_output(response)
 
             if thought:
-                print(f"思考: {thought}")
+                print("Thought:", thought)
 
             if not action:
-                print("警告:未能解析出有效的Action，流程终止。")
+                print("无法解析Action")
                 break
 
-            # 4. 执行Action
             if action.startswith("Finish"):
-                # 如果是Finish指令，提取最终答案并结束
-                final_answer = re.match(r"Finish\[(.*)\]", action).group(1)
-                print(f"🎉 最终答案: {final_answer}")
-                return final_answer
+                answer = re.match(
+                    r"Finish\[(.*)\]",
+                    action,
+                    re.DOTALL
+                ).group(1)
+
+                print(answer)
+
+                return answer
 
             tool_name, tool_input = self._parse_action(action)
-            if not tool_name or not tool_input:
-                # ... 处理无效Action格式 ...
+
+            if tool_name is None:
+                observation = (
+                    "Action格式错误。\n"
+                    "正确格式：ToolName[input]"
+                )
+
+                self.history.append(f"Action:{action}")
+                self.history.append(f"Observation:{observation}")
+
                 continue
 
-            print(f"🎬 行动: {tool_name}[{tool_input}]")
+            print(f"Action：{tool_name}[{tool_input}]")
 
-            tool_function = self.tool_executor.getTool(tool_name)
-            if not tool_function:
-                observation = f"错误:未找到名为 '{tool_name}' 的工具。"
+            success, observation = self.tool_executor.execute(
+                tool_name,
+                tool_input
+            )
+
+            # ========= Tool Error Recovery =========
+
+            if success:
+
+                self.failed_count = 0
+                self.same_tool_failed = 0
+                self.last_failed_tool = None
+
             else:
-                observation = tool_function(tool_input)  # 调用真实工具
 
-            # (这段逻辑紧随工具调用之后，在 while 循环的末尾)
-            print(f"👀 观察: {observation}")
+                self.failed_count += 1
 
-            # 将本轮的Action和Observation添加到历史记录中
+                if self.last_failed_tool == tool_name:
+                    self.same_tool_failed += 1
+                else:
+                    self.same_tool_failed = 1
+
+                self.last_failed_tool = tool_name
+
+                if self.same_tool_failed >= 2:
+                    observation += (
+                        "\n\n你已经连续两次调用同一个失败工具。"
+                        "\n请不要继续重复调用它。"
+                        "\n请重新分析问题，并尝试其它工具。"
+                    )
+
+                if self.failed_count >= 3:
+                    observation += (
+                        "\n\n工具已经连续失败三次。"
+                        "\n请重新思考："
+                        "\n1. 是否工具选择错误？"
+                        "\n2. 是否参数格式错误？"
+                        "\n3. 是否应该换一个工具？"
+                    )
+
+                if self.failed_count >= 5:
+                    print("工具连续失败次数过多，停止执行。")
+
+                    return "工具调用连续失败，任务终止。"
+
+            # ======================================
+
+            print("Observation:")
+            print(observation)
+
             self.history.append(f"Action: {action}")
             self.history.append(f"Observation: {observation}")
 
-            # 循环结束
-        print("已达到最大步数，流程终止。")
+        print("达到最大推理步数")
+
         return None
 
-    # (这些方法是 ReActAgent 类的一部分)
     def _parse_output(self, text: str):
         """解析LLM的输出，提取Thought和Action。
         """
@@ -123,20 +186,20 @@ class ReActAgent:
 
 
 if __name__ == "__main__":
-    from react.tool.search import search
+    from react.tool.calculator import calculator
 
     llm = HelloAgentsLLM()
 
     tool_executor = ToolExecutor()
 
     tool_executor.registerTool(
-        "Search",
-        "一个网页搜索工具",
-        search
+        "Calculator",
+        "可以回答任何问题。",
+        calculator
     )
 
     agent = ReActAgent(llm, tool_executor)
 
-    answer = agent.run("英伟达最新GPU是什么？")
+    answer = agent.run("苏州天气？")
 
     print(answer)
