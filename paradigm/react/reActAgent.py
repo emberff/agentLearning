@@ -1,7 +1,7 @@
 import re
 
 from LLMCilent import HelloAgentsLLM
-from react.toolExecutor import ToolExecutor
+from paradigm.react.toolExecutor import ToolExecutor
 
 
 # ReAct 提示词模板
@@ -186,7 +186,7 @@ class ReActAgent:
 
 
 if __name__ == "__main__":
-    from react.tool.calculator import calculator
+    from paradigm.react.tool.calculator import calculator
 
     llm = HelloAgentsLLM()
 

@@ -1,5 +1,5 @@
-from planAndSolve.planner import Planner
-from planAndSolve.executor import Executor
+from paradigm.planAndSolve.planner import Planner
+from paradigm.planAndSolve.executor import Executor
 
 class PlanAndSolveAgent:
     def __init__(self, llm_client):
