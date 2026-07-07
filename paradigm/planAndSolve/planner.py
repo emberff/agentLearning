@@ -26,7 +26,7 @@ class Planner:
         prompt = PLANNER_PROMPT_TEMPLATE.format(question=question)
 
         # 为了生成计划，我们构建一个简单的消息列表
-        messages = [{"role": "user", "content": prompt}]
+        messages = [{"roles": "user", "content": prompt}]
 
         print("--- 正在生成计划 ---")
         # 使用流式输出来获取完整的计划

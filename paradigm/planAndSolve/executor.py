@@ -41,7 +41,7 @@ class Executor:
                 current_step=step
             )
 
-            messages = [{"role": "user", "content": prompt}]
+            messages = [{"roles": "user", "content": prompt}]
 
             response_text = self.LLMCilent.think(messages=messages) or ""
 

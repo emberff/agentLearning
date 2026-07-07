@@ -63,7 +63,7 @@ class ReActAgent:
 
             messages = [
                 {
-                    "role": "user",
+                    "roles": "user",
                     "content": prompt
                 }
             ]
